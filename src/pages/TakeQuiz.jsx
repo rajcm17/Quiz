@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { quizService } from '../services/quiz.service';
+import { useAuth } from '../hooks/useAuth';
 
 const TakeQuiz = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [quiz, setQuiz] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -27,6 +29,13 @@ const TakeQuiz = () => {
 
     fetchQuiz();
   }, [id, navigate]);
+
+  React.useEffect(() => {
+    // Only allow users with role 'user' to take quizzes
+    if (user && user.role !== 'user') {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   // Timer effect
   useEffect(() => {
@@ -125,6 +134,19 @@ const TakeQuiz = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Back Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+          Back to Dashboard
+        </button>
+      </div>
+
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
@@ -192,14 +214,26 @@ const TakeQuiz = () => {
 
           {/* Navigation */}
           <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestionIndex === 0}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              Previous
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={handlePreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2h2v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
+                Dashboard
+              </button>
+            </div>
             
             {currentQuestionIndex < quiz.questions.length - 1 ? (
               <button

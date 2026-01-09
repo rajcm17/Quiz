@@ -41,26 +41,30 @@ const MainLayout = () => {
                   >
                     Dashboard
                   </Link>
-                  <Link
-                    to="/create-quiz"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      location.pathname === '/create-quiz'
-                        ? 'border-indigo-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
-                  >
-                    Create Quiz
-                  </Link>
-                  <Link
-                    to="/analytics"
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      location.pathname === '/analytics'
-                        ? 'border-indigo-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
-                  >
-                    Analytics
-                  </Link>
+                  {user?.role === 'admin' && (
+                    <>
+                      <Link
+                        to="/create-quiz"
+                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                          location.pathname === '/create-quiz'
+                            ? 'border-indigo-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        }`}
+                      >
+                        Create Quiz
+                      </Link>
+                      <Link
+                        to="/analytics"
+                        className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                          location.pathname === '/analytics'
+                            ? 'border-indigo-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        }`}
+                      >
+                        Analytics
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center">
@@ -79,6 +83,12 @@ const MainLayout = () => {
                       </button>
                       {dropdownOpen && (
                         <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                          <div className="px-4 py-2 border-b text-xs text-gray-500">
+                            <p className="font-medium text-gray-900">{user?.email}</p>
+                            <p className="capitalize mt-1">
+                              Role: <span className={user?.role === 'admin' ? 'font-bold text-red-600' : 'font-bold text-blue-600'}>{user?.role}</span>
+                            </p>
+                          </div>
                           <Link
                             to="/profile"
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

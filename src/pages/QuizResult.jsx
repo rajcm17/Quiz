@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { quizService } from '../services/quiz.service';
+import { useAuth } from '../hooks/useAuth';
 
 const QuizResult = () => {
   const { id } = useParams();
@@ -8,6 +9,8 @@ const QuizResult = () => {
   const navigate = useNavigate();
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const { user } = useAuth();
 
   const { score = 0, total = 0, answers = {}, quizTitle = '' } = location.state || {};
 
@@ -22,6 +25,13 @@ const QuizResult = () => {
 
     fetchQuiz();
   }, [id]);
+
+  React.useEffect(() => {
+    // Only users can view quiz results here
+    if (user && user.role !== 'user') {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
 

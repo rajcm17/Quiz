@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { quizService } from '../services/quiz.service';
 import { useAuth } from '../hooks/useAuth';
 import { QUIZ_STATUS } from '../utils/constants';
 
-const CreateQuiz = () => {
+const EditQuiz = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { id } = useParams();
 
   React.useEffect(() => {
-    // Only admins can access create quiz
+    // Only admins can access edit quiz
     if (user && user.role !== 'admin') {
       navigate('/dashboard');
     }
@@ -28,8 +29,36 @@ const CreateQuiz = () => {
     correctAnswer: 0
   });
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Load quiz data on mount
+  useEffect(() => {
+    const loadQuiz = async () => {
+      if (id && user) {
+        const result = await quizService.getQuizById(id);
+        if (result.success) {
+          const quiz = result.quiz;
+          // Only allow editing own quizzes
+          if (quiz.createdBy !== user.uid) {
+            navigate('/dashboard');
+            return;
+          }
+          setQuizData({
+            title: quiz.title || '',
+            description: quiz.description || '',
+            timeLimit: quiz.timeLimit || '',
+            questions: quiz.questions || []
+          });
+        } else {
+          setError(result.error);
+        }
+        setLoading(false);
+      }
+    };
+    loadQuiz();
+  }, [id, user, navigate]);
 
   const addQuestion = () => {
     if (!currentQuestion.question.trim()) {
@@ -90,44 +119,36 @@ const CreateQuiz = () => {
       return;
     }
     
-    setLoading(true);
+    setSaving(true);
     setError('');
     
-    const result = await quizService.createQuiz({
+    const result = await quizService.updateQuiz(id, {
       ...quizData,
       timeLimit: parseInt(quizData.timeLimit) || 0,
       status
-    }, user.uid);
+    });
     
     if (result.success) {
       navigate('/dashboard');
     } else {
       setError(result.error);
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const handlePreview = () => {
-    if (!quizData.title.trim()) {
-      setError('Quiz title is required');
-      return;
-    }
-    
-    if (quizData.questions.length === 0) {
-      setError('At least one question is required');
-      return;
-    }
-    
-    // For preview, we'll just show the questions in an alert for now
-    // In a real app, we'd navigate to a preview page
-    alert(`Preview: ${quizData.questions.length} questions ready`);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Create New Quiz</h1>
-        <p className="mt-2 text-gray-600">Build your quiz by adding questions and setting options.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Edit Quiz</h1>
+        <p className="mt-2 text-gray-600">Update your quiz details and questions.</p>
       </div>
 
       {error && (
@@ -314,15 +335,15 @@ const CreateQuiz = () => {
           <div className="flex justify-end space-x-3">
             <button
               type="button"
-              onClick={handlePreview}
+              onClick={() => navigate('/dashboard')}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Preview
+              Cancel
             </button>
             <button
               type="button"
               onClick={() => handleSave(QUIZ_STATUS.DRAFT)}
-              disabled={loading}
+              disabled={saving}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
               Save as Draft
@@ -330,10 +351,10 @@ const CreateQuiz = () => {
             <button
               type="button"
               onClick={() => handleSave(QUIZ_STATUS.PUBLISHED)}
-              disabled={loading}
+              disabled={saving}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Saving...' : 'Publish Quiz'}
+              {saving ? 'Saving...' : 'Update Quiz'}
             </button>
           </div>
         </div>
@@ -342,4 +363,4 @@ const CreateQuiz = () => {
   );
 };
 
-export default CreateQuiz;
+export default EditQuiz;

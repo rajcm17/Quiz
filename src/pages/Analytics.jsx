@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { quizService } from '../services/quiz.service';
 import { useAuth } from '../hooks/useAuth';
 
@@ -11,6 +12,15 @@ const Analytics = () => {
     quizzes: []
   });
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    // Only admins should access analytics
+    if (user && user.role !== 'admin') {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {

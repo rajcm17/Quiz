@@ -9,6 +9,7 @@ const Signup = () => {
     password: '',
     confirmPassword: ''
   });
+  const [role, setRole] = useState('user');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -40,7 +41,10 @@ const Signup = () => {
       return;
     }
 
-    const { success, error } = await authService.signUp(formData.email, formData.password);
+    // Force new signups to default to 'user' role to avoid accidental admin creation
+    const finalRole = role === 'admin' ? 'user' : role;
+
+    const { success, error } = await authService.signUp(formData.email, formData.password, finalRole);
     
     if (success) {
       navigate('/dashboard');
@@ -80,6 +84,10 @@ const Signup = () => {
             </div>
           </div>
         )}
+
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <p className="text-sm text-gray-800">Accounts are created as <strong>User</strong> by default. Admin privileges must be granted manually in the database.</p>
+        </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
